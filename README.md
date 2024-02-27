@@ -41,5 +41,5 @@
 
 The password for portainer is as follows:
 
-Username: admin <br>
-Password: admin@123456
+> Username: admin
+> Password: admin@123456
