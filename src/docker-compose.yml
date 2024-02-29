@@ -1,12 +1,23 @@
 version: '3.4'
 
 services:
+
+  # mongo db image for docker in catalog api
   catalogdb:
     image: mongo
     
+  # redis db image for docker in basket api
   # alpine with redis will be used as it takes less space
   basketdb:
     image: redis:alpine
+
+  # postgres db image for docker in discount api
+  # alpine with redis will be used as it takes less space
+  discountdb:
+    image: postgres:alpine
+
+  pgadmin:
+    image: dpage/pgadmin4
 
   portainer:
     image: portainer/portainer-ce
@@ -23,6 +34,14 @@ services:
       context: .
       dockerfile: Services/Basket/Basket.API/Dockerfile
 
+  discount.api:
+    image: ${DOCKER_REGISTRY-}discountapi
+    build:
+      context: .
+      dockerfile: Services/Discount/Discount.API/Dockerfile
+
 volumes:
   mongo_data:    
   portainer_data:
+  postgres_data:  
+  pgadmin_data:  
