@@ -61,7 +61,7 @@ services:
     ports:
       - "8000:8080"
 
-  # Instead of this tead of this "GrpcSettings:DiscountUrl=http://discount.grpc" following will be used in .net 8
+  # Instead of this "GrpcSettings:DiscountUrl=http://discount.grpc" following will be used in .net 8
   basket.api:
     container_name: basket.api
     environment:
