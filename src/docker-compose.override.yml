@@ -61,11 +61,13 @@ services:
     ports:
       - "8000:8080"
 
+  # Instead of this tead of this "GrpcSettings:DiscountUrl=http://discount.grpc" following will be used in .net 8
   basket.api:
     container_name: basket.api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - "CacheSettings:ConnectionString=basketdb:6379"
+      - "GrpcSettings:DiscountUrl=http://host.docker.internal:8003"
     depends_on:
       - basketdb
     ports:
@@ -80,4 +82,14 @@ services:
       - discountdb
     ports:
       - "8002:8080"
+
+  discount.grpc:
+    container_name: discount.grpc
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - "DatabaseSettings:ConnectionString=Server=discountdb;Port=5432;Database=DiscountDb;User Id=admin;Password=admin1234;"
+    depends_on:
+      - discountdb
+    ports:
+      - "8003:8080"
 
