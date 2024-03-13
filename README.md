@@ -43,3 +43,9 @@ The portainer is used for managing containers in Docker. The password for portai
 
 > Username: admin <br>
 > Password: admin@123456
+
+## Grpc
+
+To consume the Grpc service, following URL with port will be used instead of the http://discount.grpc in docker-compose.override.yml
+
+> http://host.docker.internal:8003
