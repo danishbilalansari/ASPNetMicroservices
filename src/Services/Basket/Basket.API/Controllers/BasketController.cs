@@ -1,6 +1,9 @@
-﻿using Basket.API.Entities;
+﻿using AutoMapper;
+using Basket.API.Entities;
 using Basket.API.GrpcServices;
 using Basket.API.Repositories;
+using EventBus.Messages.Events;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Runtime.CompilerServices;
@@ -13,11 +16,15 @@ namespace Basket.API.Controllers
     {
         private readonly IBasketRepository _repository;
         private readonly DiscountGrpcService _discountGrpcService;
+        private readonly IMapper _mapper;
+        private readonly IPublishEndpoint _publishEndpoint;
 
-        public BasketController(IBasketRepository repository, DiscountGrpcService discountGrpcService)
+        public BasketController(IBasketRepository repository, DiscountGrpcService discountGrpcService, IMapper mapper, IPublishEndpoint publishEndpoint)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _discountGrpcService = discountGrpcService ?? throw new ArgumentNullException(nameof(discountGrpcService));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _publishEndpoint = publishEndpoint ?? throw new ArgumentNullException(nameof(publishEndpoint));
         }
 
         [HttpGet("{userName}", Name = "GetBasket")]
@@ -48,6 +55,34 @@ namespace Basket.API.Controllers
         {
             await _repository.DeleteBasket(userName);
             return Ok();
+        }
+
+        [Route("[action]")]
+        [HttpPost]
+        [ProducesResponseType((int)HttpStatusCode.Accepted)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> Checkout([FromBody] BasketCheckout basketCheckout) 
+        {
+            // Get existing basket with total price
+            // Create baskCheckout event - Set total price on backetCheckout event message
+            // Send checkout event to rabbitmq
+            // Remove the basket
+
+            var basket = await _repository.GetBasket(basketCheckout.UserName);
+            if (basket == null) 
+            {
+                return BadRequest();
+            }
+
+            // Send checkout event to rabbitmq
+            var eventmessage = _mapper.Map<BasketCheckoutEvent>(basketCheckout);
+            eventmessage.TotalPrice = basket.TotalPrice;
+            await _publishEndpoint.Publish(eventmessage);
+
+            // Remove the basket
+            await _repository.DeleteBasket(basket.Username);
+
+            return Accepted();
         }
     }
 }

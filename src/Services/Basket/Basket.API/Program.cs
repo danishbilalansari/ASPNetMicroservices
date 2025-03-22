@@ -30,7 +30,9 @@ namespace Basket.API
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Basket.API", Version = "v1" });
             });
 
+            // General Confiuration
             builder.Services.AddScoped<IBasketRepository, BasketRepository>();
+            builder.Services.AddAutoMapper(typeof(Program));
 
             // Grpc Configuration
             builder.Services.AddGrpcClient<DiscountProtoService.DiscountProtoServiceClient>(
@@ -47,7 +49,8 @@ namespace Basket.API
                 });
             });
 
-            //builder.Services.AddMassTransitHostedService();
+            // This might not required as we are using the latest version
+            // builder.Services.AddMassTransitHostedService();
 
             var app = builder.Build();
 
