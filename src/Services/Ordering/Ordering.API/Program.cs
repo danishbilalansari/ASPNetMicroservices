@@ -36,8 +36,8 @@ namespace Ordering.API
             // builder.Services.AddMassTransitHostedService();
 
             // General Configuration
-            // builder.Services.AddAutoMapper(typeof(Program));
             builder.Services.AddScoped<BasketCheckoutConsumer>();
+            builder.Services.AddAutoMapper(typeof(Program));
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
