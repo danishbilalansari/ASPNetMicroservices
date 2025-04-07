@@ -2,6 +2,7 @@ using Catalog.Core.Repositories;
 using Catalog.Infrastructure.Data;
 using Catalog.Infrastructure.Repositories;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
 
 namespace Catalog.API
 {
@@ -22,9 +23,15 @@ namespace Catalog.API
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Catalog.API", Version = "v1" });
             });
 
+            builder.Services.AddAutoMapper(typeof(Program).Assembly);
+            builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
+
+            //Register Application Services
             builder.Services.AddScoped<ICatalogContext, CatalogContext>();
             builder.Services.AddScoped<IProductRepository, ProductRepository>();
-            
+            builder.Services.AddScoped<IBrandRepository, ProductRepository>();
+            builder.Services.AddScoped<ITypesRepository, ProductRepository>();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

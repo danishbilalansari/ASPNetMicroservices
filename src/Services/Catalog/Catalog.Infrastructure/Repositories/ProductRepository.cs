@@ -1,5 +1,6 @@
 ﻿using Catalog.Core.Entities;
 using Catalog.Core.Repositories;
+using Catalog.Core.Specs;
 using Catalog.Infrastructure.Data;
 using MongoDB.Driver;
 
@@ -7,80 +8,84 @@ namespace Catalog.Infrastructure.Repositories
 {
     public class ProductRepository : IProductRepository, IBrandRepository, ITypesRepository
     {
-        private readonly ICatalogContext _context;
-        
+        public ICatalogContext _context { get; }
         public ProductRepository(ICatalogContext context)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
-        }
-
-        public async Task<IEnumerable<Product>> GetProducts()
-        {
-            // Find in following linq is part of IMongoCollection
-            return await _context
-                        .Products
-                        .Find(x => true)
-                        .ToListAsync();
+            _context = context;
         }
 
         public async Task<Product> GetProduct(string id)
         {
-            // Find in following linq is part of IMongoCollection
             return await _context
-                        .Products
-                        .Find(x => x.Id == id)
-                        .FirstOrDefaultAsync();
+                .Products
+                .Find(p => p.Id == id)
+                .FirstOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<Product>> GetProductByBrands(string brandName)
+        public async Task<Pagination<Product>> GetProducts(CatalogSpecParams catalogSpecParams)
         {
-            // FilterDefinition is a part of MongoDB.Driver and used for filtering specific entity
-            FilterDefinition<Product> filter = Builders<Product>.Filter.Eq(x => x.Brands.Name, brandName);
-
-            // Find in following linq is part of IMongoCollection
-            return await _context
-                        .Products
-                        .Find(filter)
-                        .ToListAsync();
+            var builder = Builders<Product>.Filter;
+            var filter = builder.Empty;
+            if (!string.IsNullOrEmpty(catalogSpecParams.Search))
+            {
+                filter = filter & builder.Where(p => p.Name.ToLower().Contains(catalogSpecParams.Search.ToLower()));
+            }
+            if (!string.IsNullOrEmpty(catalogSpecParams.BrandId))
+            {
+                var brandFilter = builder.Eq(p => p.Brands.Id, catalogSpecParams.BrandId);
+                filter &= brandFilter;
+            }
+            if (!string.IsNullOrEmpty(catalogSpecParams.TypeId))
+            {
+                var TypeFilter = builder.Eq(p => p.Types.Id, catalogSpecParams.TypeId);
+                filter &= TypeFilter;
+            }
+            var totalItems = await _context.Products.CountDocumentsAsync(filter);
+            var data = await DataFilter(catalogSpecParams, filter);
+            return new Pagination<Product>(
+                catalogSpecParams.PageIndex,
+                catalogSpecParams.PageSize,
+                (int)totalItems,
+                data
+            );
         }
 
-        public async Task<IEnumerable<Product>> GetProductByName(string name)
+        public async Task<IEnumerable<Product>> GetProductsByBrand(string brandName)
         {
-            // FilterDefinition is a part of MongoDB.Driver and used for filtering specific entity
-            FilterDefinition<Product> filter = Builders<Product>.Filter.Eq(x => x.Name, name);
-            
             return await _context
-                        .Products
-                        .Find(filter)
-                        .ToListAsync();
+                .Products
+                .Find(p => p.Brands.Name.ToLower() == brandName.ToLower())
+                .ToListAsync();
         }
 
-        public async Task CreateProduct(Product product)
+        public async Task<IEnumerable<Product>> GetProductsByName(string name)
+        {
+            return await _context
+                .Products
+                .Find(p => p.Name.ToLower() == name.ToLower())
+                .ToListAsync();
+        }
+
+        public async Task<Product> CreateProduct(Product product)
         {
             await _context.Products.InsertOneAsync(product);
-        }
-
-        public async Task<bool> UpdateProduct(Product product)
-        {
-            // ReplaceOneAsync is part of IMongoCollection
-            var updatedResult = await _context
-                                    .Products
-                                    .ReplaceOneAsync(filter: g => g.Id == product.Id, replacement: product);
-
-            return updatedResult.IsAcknowledged && updatedResult.ModifiedCount > 0;
+            return product;
         }
 
         public async Task<bool> DeleteProduct(string id)
         {
-            // FilterDefinition is a part of MongoDB.Driver and used for filtering specific entity
-            FilterDefinition<Product> filter = Builders<Product>.Filter.Eq(x => x.Id, id);
+            var deletedProduct = await _context
+                .Products
+                .DeleteOneAsync(p => p.Id == id);
+            return deletedProduct.IsAcknowledged && deletedProduct.DeletedCount > 0;
+        }
 
-            // DeleteResult is part of MongoDb.Driver and DeleteOneAsynce is part of IMongoCollection
-            DeleteResult deleteResult = await _context
-                                            .Products
-                                            .DeleteOneAsync(filter);
-
-            return deleteResult.IsAcknowledged && deleteResult.DeletedCount > 0;
+        public async Task<bool> UpdateProduct(Product product)
+        {
+            var updatedProduct = await _context
+                .Products
+                .ReplaceOneAsync(p => p.Id == product.Id, product);
+            return updatedProduct.IsAcknowledged && updatedProduct.ModifiedCount > 0;
         }
 
         public async Task<IEnumerable<ProductBrand>> GetAllBrands()
@@ -97,6 +102,34 @@ namespace Catalog.Infrastructure.Repositories
                 .Types
                 .Find(type => true)
                 .ToListAsync();
+        }
+
+        private async Task<IReadOnlyList<Product>> DataFilter(CatalogSpecParams catalogSpecParams, FilterDefinition<Product> filter)
+        {
+            var sortDefn = Builders<Product>.Sort.Ascending("Name"); // Default
+            if (!string.IsNullOrEmpty(catalogSpecParams.Sort))
+            {
+                switch (catalogSpecParams.Sort)
+                {
+                    case "priceAsc":
+                        sortDefn = Builders<Product>.Sort.Ascending(p => p.Price);
+                        break;
+                    case "priceDesc":
+                        sortDefn = Builders<Product>.Sort.Descending(p => p.Price);
+                        break;
+                    default:
+                        sortDefn = Builders<Product>.Sort.Ascending(p => p.Name);
+                        break;
+
+                }
+            }
+            return await _context
+            .Products
+            .Find(filter)
+            .Sort(sortDefn)
+            .Skip(catalogSpecParams.PageSize * (catalogSpecParams.PageIndex - 1))
+            .Limit(catalogSpecParams.PageSize)
+            .ToListAsync();
         }
     }
 }
