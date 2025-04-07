@@ -1,6 +1,6 @@
-
-using Catalog.API.Data;
-using Catalog.API.Repositories;
+using Catalog.Core.Repositories;
+using Catalog.Infrastructure.Data;
+using Catalog.Infrastructure.Repositories;
 using Microsoft.OpenApi.Models;
 
 namespace Catalog.API

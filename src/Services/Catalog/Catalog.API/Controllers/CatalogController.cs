@@ -1,5 +1,5 @@
-﻿using Catalog.API.Entities;
-using Catalog.API.Repositories;
+﻿using Catalog.Core.Entities;
+using Catalog.Core.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -42,12 +42,12 @@ namespace Catalog.API.Controllers
             return Ok(product);
         }
 
-        [Route("[action]/{category}", Name = "GetProductByCategory")]
+        [Route("[action]/{category}", Name = "GetProductByBrandName")]
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<Product>), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult<Product>> GetProductByCategory([FromRoute] string category)
+        public async Task<ActionResult<Product>> GetProductByBrandName([FromRoute] string brandName)
         {
-            var products = await _repository.GetProductByCategory(category);
+            var products = await _repository.GetProductByBrands(brandName);
             return Ok(products);
         }
 

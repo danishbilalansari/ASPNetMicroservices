@@ -1,10 +1,11 @@
-﻿using Catalog.API.Data;
-using Catalog.API.Entities;
+﻿using Catalog.Core.Entities;
+using Catalog.Core.Repositories;
+using Catalog.Infrastructure.Data;
 using MongoDB.Driver;
 
-namespace Catalog.API.Repositories
+namespace Catalog.Infrastructure.Repositories
 {
-    public class ProductRepository : IProductRepository
+    public class ProductRepository : IProductRepository, IBrandRepository, ITypesRepository
     {
         private readonly ICatalogContext _context;
         
@@ -31,10 +32,10 @@ namespace Catalog.API.Repositories
                         .FirstOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<Product>> GetProductByCategory(string cateoryName)
+        public async Task<IEnumerable<Product>> GetProductByBrands(string brandName)
         {
             // FilterDefinition is a part of MongoDB.Driver and used for filtering specific entity
-            FilterDefinition<Product> filter = Builders<Product>.Filter.Eq(x => x.Category, cateoryName);
+            FilterDefinition<Product> filter = Builders<Product>.Filter.Eq(x => x.Brands.Name, brandName);
 
             // Find in following linq is part of IMongoCollection
             return await _context
@@ -80,6 +81,22 @@ namespace Catalog.API.Repositories
                                             .DeleteOneAsync(filter);
 
             return deleteResult.IsAcknowledged && deleteResult.DeletedCount > 0;
+        }
+
+        public async Task<IEnumerable<ProductBrand>> GetAllBrands()
+        {
+            return await _context
+                .Brands
+                .Find(brand => true)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<ProductType>> GetAllTypes()
+        {
+            return await _context
+                .Types
+                .Find(type => true)
+                .ToListAsync();
         }
     }
 }

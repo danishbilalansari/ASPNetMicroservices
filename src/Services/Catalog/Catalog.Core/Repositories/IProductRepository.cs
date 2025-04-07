@@ -1,14 +1,13 @@
-﻿using Catalog.API.Entities;
+﻿using Catalog.Core.Entities;
 
-namespace Catalog.API.Repositories
+namespace Catalog.Core.Repositories
 {
     public interface IProductRepository
     {
         Task<IEnumerable<Product>> GetProducts();
         Task<Product> GetProduct(string id);
-        Task<IEnumerable<Product>> GetProductByName(string name);
-        Task<IEnumerable<Product>> GetProductByCategory(string cateoryName);
-
+        Task<IEnumerable<Product>> GetProductByName(string productName);
+        Task<IEnumerable<Product>> GetProductByBrands(string brandName);
         Task CreateProduct(Product product);
         Task<bool> UpdateProduct(Product product);
         Task<bool> DeleteProduct(string id);
