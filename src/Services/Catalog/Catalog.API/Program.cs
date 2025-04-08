@@ -1,3 +1,5 @@
+using Asp.Versioning;
+using Catalog.Application.Handlers;
 using Catalog.Core.Repositories;
 using Catalog.Infrastructure.Data;
 using Catalog.Infrastructure.Repositories;
@@ -15,6 +17,14 @@ namespace Catalog.API
             // Add services to the container.
             builder.Services.AddAuthorization();
 
+            // Add API Versioning
+            builder.Services.AddApiVersioning(options =>
+            {
+                options.ReportApiVersions = true;
+                options.AssumeDefaultVersionWhenUnspecified = true;
+                options.DefaultApiVersion = new ApiVersion(1, 0);
+            });
+
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddControllers();
@@ -24,7 +34,15 @@ namespace Catalog.API
             });
 
             builder.Services.AddAutoMapper(typeof(Program).Assembly);
-            builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
+
+            //Register Mediatr
+            var assemblies = new Assembly[]
+            {
+                Assembly.GetExecutingAssembly(),
+                typeof(GetAllBrandsHandler).Assembly
+            };
+            builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(assemblies));
+            //builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
             //Register Application Services
             builder.Services.AddScoped<ICatalogContext, CatalogContext>();
