@@ -17,6 +17,8 @@ namespace Catalog.API
             // Add services to the container.
             builder.Services.AddAuthorization();
 
+            builder.Services.AddControllers();
+
             // Add API Versioning
             builder.Services.AddApiVersioning(options =>
             {
@@ -27,7 +29,6 @@ namespace Catalog.API
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddControllers();
             builder.Services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Catalog.API", Version = "v1" });
@@ -62,6 +63,7 @@ namespace Catalog.API
 
             app.UseRouting();
             app.UseAuthorization();
+            app.MapControllers();
             app.Run();
         }
     }
