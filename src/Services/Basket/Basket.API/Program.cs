@@ -1,8 +1,12 @@
-using Basket.API.GrpcServices;
-using Basket.API.Repositories;
+using Asp.Versioning;
+using Basket.Application.GrpcService;
+using Basket.Application.Handlers;
+using Basket.Core.Repositories;
+using Basket.Infrastructure.Repositories;
 using Discount.Grpc.Protos;
 using MassTransit;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
 
 namespace Basket.API
 {
@@ -15,8 +19,34 @@ namespace Basket.API
             // Add services to the container.
             builder.Services.AddAuthorization();
 
+            builder.Services.AddControllers();
+
+            // Add API Versioning
+            builder.Services.AddApiVersioning(options =>
+            {
+                options.ReportApiVersions = true;
+                options.AssumeDefaultVersionWhenUnspecified = true;
+                options.DefaultApiVersion = new ApiVersion(1, 0);
+            });
+
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Basket.API", Version = "v1" });
+            });
+
+            builder.Services.AddAutoMapper(typeof(Program).Assembly);
+
+            //Register Mediatr
+            var assemblies = new Assembly[]
+            {
+                Assembly.GetExecutingAssembly(),
+                typeof(CreateShoppingCartCommandHandler).Assembly
+            };
+
+            builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(assemblies));
+            //builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
             // Following Redis Cache statement is added in service as a distributed cache
             builder.Services.AddStackExchangeRedisCache(options =>
@@ -24,21 +54,13 @@ namespace Basket.API
                 options.Configuration = builder.Configuration.GetValue<string>("CacheSettings:ConnectionString");
             });
 
-            builder.Services.AddControllers();
-            builder.Services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Basket.API", Version = "v1" });
-            });
-
             // General Confiuration
             builder.Services.AddScoped<IBasketRepository, BasketRepository>();
-            builder.Services.AddAutoMapper(typeof(Program));
+            builder.Services.AddScoped<DiscountGrpcService>();
 
             // Grpc Configuration
-            builder.Services.AddGrpcClient<DiscountProtoService.DiscountProtoServiceClient>(
-                o => { o.Address = new Uri(builder.Configuration["GrpcSettings:DiscountUrl"]); });
-
-            builder.Services.AddScoped<DiscountGrpcService>();
+            //builder.Services.AddGrpcClient<DiscountProtoService.DiscountProtoServiceClient>(
+                //o => { o.Address = new Uri(builder.Configuration["GrpcSettings:DiscountUrl"]); });
 
             // MassTransit RabbitMQ Configuration
             builder.Services.AddMassTransit(config =>

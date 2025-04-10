@@ -1,87 +1,80 @@
-﻿using AutoMapper;
-using Basket.API.Entities;
-using Basket.API.GrpcServices;
-using Basket.API.Repositories;
+﻿using Asp.Versioning;
+using Basket.Application.Commands;
+using Basket.Application.GrpcService;
+using Basket.Application.Mappers;
+using Basket.Application.Queries;
+using Basket.Application.Responses;
+using Basket.Core.Entities;
 using EventBus.Messages.Events;
 using MassTransit;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
-using System.Runtime.CompilerServices;
 
 namespace Basket.API.Controllers
 {
-    [ApiController]
-    [Route("api/v1/[controller]")]
-    public class BasketController : ControllerBase
+    [ApiVersion("1")]
+    public class BasketController : ApiController
     {
-        private readonly IBasketRepository _repository;
-        private readonly DiscountGrpcService _discountGrpcService;
-        private readonly IMapper _mapper;
+        public readonly IMediator _mediator;
         private readonly IPublishEndpoint _publishEndpoint;
+        private readonly ILogger<BasketController> _logger;
 
-        public BasketController(IBasketRepository repository, DiscountGrpcService discountGrpcService, IMapper mapper, IPublishEndpoint publishEndpoint)
+        public BasketController(IMediator mediator, IPublishEndpoint publishEndpoint, ILogger<BasketController> logger)
         {
-            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-            _discountGrpcService = discountGrpcService ?? throw new ArgumentNullException(nameof(discountGrpcService));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-            _publishEndpoint = publishEndpoint ?? throw new ArgumentNullException(nameof(publishEndpoint));
+            _mediator = mediator;
+            _publishEndpoint = publishEndpoint;
+            _logger = logger;
         }
 
-        [HttpGet("{userName}", Name = "GetBasket")]
-        [ProducesResponseType(typeof(ShoppingCart), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult<ShoppingCart>> GetBasket(string userName) 
+        [HttpGet]
+        [Route("[action]/{userName}", Name = "GetBasketByUserName")]
+        [ProducesResponseType(typeof(ShoppingCartResponse), (int)HttpStatusCode.OK)]
+        public async Task<ActionResult<ShoppingCartResponse>> GetBasket(string userName)
         {
-            var basket = await _repository.GetBasket(userName);
-            return Ok(basket ?? new ShoppingCart(userName));
+            var query = new GetBasketByUserNameQuery(userName);
+            var basket = await _mediator.Send(query);
+            return Ok(basket);
         }
 
-
-        [HttpPost]
-        [ProducesResponseType(typeof(ShoppingCart), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult<ShoppingCart>> UpdateBasket([FromBody] ShoppingCart basket)
+        [HttpPost("CreateBasket")]
+        [ProducesResponseType(typeof(ShoppingCartResponse), (int)HttpStatusCode.OK)]
+        public async Task<ActionResult<ShoppingCartResponse>> UpdateBasket([FromBody] CreateShoppingCartCommand createShoppingCartCommand)
         {
-            foreach(var item in basket.Items) 
-            {
-                var coupon = await _discountGrpcService.GetDiscount(item.ProductName);
-                item.Price -= coupon.Amount;
-            }
-
-            return Ok(await _repository.UpdateBasket(basket));
+            var basket = await _mediator.Send(createShoppingCartCommand);
+            return Ok(basket);
         }
 
-        [HttpDelete("{userName}", Name = "DeleteBasket")]
-        [ProducesResponseType(typeof(void), (int)HttpStatusCode.OK)]
-        public async Task<IActionResult> DeleteBasket(string userName) 
+        [HttpDelete]
+        [Route("[action]/{userName}", Name = "DeleteBasketByUserName")]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        public async Task<ActionResult> DeleteBasket(string userName)
         {
-            await _repository.DeleteBasket(userName);
-            return Ok();
+            var cmd = new DeleteBasketByUserNameCommand(userName);
+            return Ok(await _mediator.Send(cmd));
         }
 
         [Route("[action]")]
         [HttpPost]
         [ProducesResponseType((int)HttpStatusCode.Accepted)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-        public async Task<IActionResult> Checkout([FromBody] BasketCheckout basketCheckout) 
+        public async Task<IActionResult> Checkout([FromBody] BasketCheckout basketCheckout)
         {
-            // Get existing basket with total price
-            // Create baskCheckout event - Set total price on backetCheckout event message
-            // Send checkout event to rabbitmq
-            // Remove the basket
-
-            var basket = await _repository.GetBasket(basketCheckout.UserName);
-            if (basket == null) 
+            //Get the existing basket with username
+            var query = new GetBasketByUserNameQuery(basketCheckout.UserName);
+            var basket = await _mediator.Send(query);
+            if (basket == null)
             {
                 return BadRequest();
             }
 
-            // Send checkout event to rabbitmq
-            var eventmessage = _mapper.Map<BasketCheckoutEvent>(basketCheckout);
-            eventmessage.TotalPrice = basket.TotalPrice;
-            await _publishEndpoint.Publish(eventmessage);
-
-            // Remove the basket
-            await _repository.DeleteBasket(basket.Username);
-
+            var eventMsg = BasketMapper.Mapper.Map<BasketCheckoutEvent>(basketCheckout);
+            eventMsg.TotalPrice = basket.TotalPrice;
+            await _publishEndpoint.Publish(eventMsg);
+            _logger.LogInformation($"Basket Published for {basket.UserName}");
+            //remove the basket
+            var deleteCmd = new DeleteBasketByUserNameCommand(basketCheckout.UserName);
+            await _mediator.Send(deleteCmd);
             return Accepted();
         }
     }
