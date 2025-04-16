@@ -7,7 +7,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Discount\Discount.Grpc\Discount.Grpc.csproj" />
 		<ProjectReference Include="..\Basket.Core\Basket.Core.csproj" />
 	</ItemGroup>
 
