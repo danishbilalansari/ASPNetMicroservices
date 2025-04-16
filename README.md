@@ -39,7 +39,11 @@
 
 ## Portainer
 
-The portainer is used for managing containers in Docker. The password for portainer is as follows:
+The portainer is used for managing containers in Docker.  To run the portainer use following:
+
+> https://localhost:9443
+
+The password for portainer is as follows:
 
 > Username: admin <br>
 > Password: admin@123456
