@@ -59,8 +59,8 @@ namespace Basket.API
             builder.Services.AddScoped<DiscountGrpcService>();
 
             // Grpc Configuration
-            //builder.Services.AddGrpcClient<DiscountProtoService.DiscountProtoServiceClient>(
-                //o => { o.Address = new Uri(builder.Configuration["GrpcSettings:DiscountUrl"]); });
+            builder.Services.AddGrpcClient<DiscountProtoService.DiscountProtoServiceClient>(
+                o => { o.Address = new Uri(builder.Configuration["GrpcSettings:DiscountUrl"]); });
 
             // MassTransit RabbitMQ Configuration
             builder.Services.AddMassTransit(config =>

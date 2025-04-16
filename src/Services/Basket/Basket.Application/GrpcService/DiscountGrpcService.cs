@@ -8,7 +8,7 @@ namespace Basket.Application.GrpcService
 
         public DiscountGrpcService(DiscountProtoService.DiscountProtoServiceClient discountProtoServiceClient)
         {
-            _discountProtoServiceClient = discountProtoServiceClient ?? throw new ArgumentNullException(nameof(discountProtoServiceClient));
+            _discountProtoServiceClient = discountProtoServiceClient;
         }
 
         public async Task<CouponModel> GetDiscount(string productName)
