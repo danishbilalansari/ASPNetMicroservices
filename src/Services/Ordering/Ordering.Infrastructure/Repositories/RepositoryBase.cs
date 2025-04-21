@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Ordering.Application.Contracts.Persistence;
-using Ordering.Domain.Common;
-using Ordering.Infrastructure.Persistence;
+using Ordering.Core.Common;
+using Ordering.Core.Repositories;
+using Ordering.Infrastructure.Data;
 using System.Linq.Expressions;
 
 namespace Ordering.Infrastructure.Repositories
@@ -20,7 +20,7 @@ namespace Ordering.Infrastructure.Repositories
             return await _dbContext.Set<T>().ToListAsync();
         }
 
-        public async Task<IReadOnlyList<T>> GetAsync(Expression<Func<T, bool>> predicate)
+        public async Task<IReadOnlyList<T>> GetAllAsync(Expression<Func<T, bool>> predicate)
         {
             return await _dbContext.Set<T>().Where(predicate).ToListAsync();
         }

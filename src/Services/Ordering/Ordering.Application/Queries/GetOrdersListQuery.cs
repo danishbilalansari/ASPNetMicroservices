@@ -1,8 +1,9 @@
 ﻿using MediatR;
+using Ordering.Application.Responses;
 
-namespace Ordering.Application.Features.Orders.Queries.GetOrdersList
+namespace Ordering.Application.Queries
 {
-    public class GetOrdersListQuery : IRequest<List<OrdersVM>>
+    public class GetOrdersListQuery : IRequest<List<OrderResponse>>
     {
         public string UserName { get; set; }
 

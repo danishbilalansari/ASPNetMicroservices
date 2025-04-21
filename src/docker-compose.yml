@@ -17,7 +17,7 @@ services:
     image: postgres:alpine
 
   orderdb:
-    image: mcr.microsoft.com/mssql/server:2017-latest
+    image: mcr.microsoft.com/mssql/server:2022-latest
 
   rabbitmq:
     image: rabbitmq:4-management-alpine

@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
 using MediatR;
-using Ordering.Application.Contracts.Persistence;
+using Ordering.Application.Responses;
+using Ordering.Application.Queries;
+using Ordering.Core.Repositories;
 
-namespace Ordering.Application.Features.Orders.Queries.GetOrdersList
+namespace Ordering.Application.Handlers
 {
-    public class GetOrdersListQueryHandler : IRequestHandler<GetOrdersListQuery, List<OrdersVM>>
+    public class GetOrdersListQueryHandler : IRequestHandler<GetOrdersListQuery, List<OrderResponse>>
     {
         private readonly IOrderRepository _orderRepository;
         private readonly IMapper _mapper;
@@ -15,11 +17,10 @@ namespace Ordering.Application.Features.Orders.Queries.GetOrdersList
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        public async Task<List<OrdersVM>> Handle(GetOrdersListQuery request,
-            CancellationToken cancellationToken)
+        public async Task<List<OrderResponse>> Handle(GetOrdersListQuery request, CancellationToken cancellationToken)
         {
             var orderList = await _orderRepository.GetOrdersByUserName(request.UserName);
-            return _mapper.Map<List<OrdersVM>>(orderList);
+            return _mapper.Map<List<OrderResponse>>(orderList);
         }
     }
 }

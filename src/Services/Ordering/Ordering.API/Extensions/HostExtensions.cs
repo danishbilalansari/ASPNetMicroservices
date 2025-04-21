@@ -6,14 +6,15 @@ namespace Ordering.API.Extensions
     public static class HostExtensions
     {
         /// <summary>
-        /// This is used for migration the database and insert it into coupon table.
-        /// If database is not available and exception occurs, it will retry the MigrateDatabase method
+        /// Applies any pending migrations for the specified <typeparamref name="TContext"/> database context 
+        /// and executes a seeder action. Implements a basic retry mechanism in case of SQL exceptions.
         /// </summary>
-        /// <typeparam name="TContext"></typeparam>
-        /// <param name="host"></param>
-        /// <param name="seeder"></param>
-        /// <param name="retry"></param>
-        /// <returns></returns>
+        /// <typeparam name="TContext">The type of the <see cref="DbContext"/> to migrate.</typeparam>
+        /// <param name="host">The application host.</param>
+        /// <param name="seeder">A delegate that seeds the database using the context and service provider.</param>
+        /// <param name="retry">The current retry attempt count (default is 0).</param>
+        /// <returns>The application host after performing the migration and seeding.</returns>
+        /// <exception cref="SqlException">May rethrow if retry limit is reached during a SQL failure.</exception>
         public static IHost MigrateDatabase<TContext>(this IHost host, 
                                                         Action<TContext, 
                                                         IServiceProvider> seeder, 
@@ -50,6 +51,13 @@ namespace Ordering.API.Extensions
             return host;
         }
 
+        /// <summary>
+        /// Invokes the database migration and executes the provided seeder logic.
+        /// </summary>
+        /// <typeparam name="TContext">The type of the <see cref="DbContext"/> being seeded.</typeparam>
+        /// <param name="seeder">The seeder action to execute.</param>
+        /// <param name="context">The database context instance.</param>
+        /// <param name="services">The application's service provider.</param>
         private static void InvokeSeeder<TContext>(Action<TContext, IServiceProvider> seeder,
                                                    TContext context,
                                                    IServiceProvider services)

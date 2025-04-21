@@ -1,11 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Ordering.Domain.Common;
-using Ordering.Domain.Entities;
+using Ordering.Core.Common;
+using Ordering.Core.Entities;
 
-namespace Ordering.Infrastructure.Persistence
+namespace Ordering.Infrastructure.Data
 {
     /// <summary>
-    /// Overriding "AdD" and "Update" method on saving
+    /// Overriding "Add" and "Update" method on saving
     /// </summary>
     public class OrderContext : DbContext
     {
@@ -23,11 +23,11 @@ namespace Ordering.Infrastructure.Persistence
                 {
                     case EntityState.Added:
                         entry.Entity.CreatedDate = DateTime.Now;
-                        entry.Entity.CreatedBy = "swn";
+                        entry.Entity.CreatedBy = "danish";
                         break;
                     case EntityState.Modified:
                         entry.Entity.LastModifiedDate = DateTime.Now;
-                        entry.Entity.LastModifiedBy = "swn";
+                        entry.Entity.LastModifiedBy = "danish";
                         break;
                 }
             }

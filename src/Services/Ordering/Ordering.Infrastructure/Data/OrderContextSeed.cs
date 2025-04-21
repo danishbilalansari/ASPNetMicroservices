@@ -1,12 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
-using Ordering.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Ordering.Core.Entities;
 
-namespace Ordering.Infrastructure.Persistence
+namespace Ordering.Infrastructure.Data
 {
     /// <summary>
     /// Following will add to database if there are no records in "Order" table

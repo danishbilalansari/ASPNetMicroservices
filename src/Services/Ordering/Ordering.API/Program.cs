@@ -1,9 +1,10 @@
+using Asp.Versioning;
 using EventBus.Messages.Common;
 using MassTransit;
 using Microsoft.OpenApi.Models;
 using Ordering.API.Consumers;
-using Ordering.Application;
-using Ordering.Infrastructure;
+using Ordering.Application.Extensions;
+using Ordering.Infrastructure.Extensions;
 
 namespace Ordering.API
 {
@@ -12,6 +13,14 @@ namespace Ordering.API
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            // Add API Versioning
+            builder.Services.AddApiVersioning(options =>
+            {
+                options.ReportApiVersions = true;
+                options.AssumeDefaultVersionWhenUnspecified = true;
+                options.DefaultApiVersion = new ApiVersion(1, 0);
+            });
 
             // Add services to the container.
             builder.Services.AddApplicationServices();

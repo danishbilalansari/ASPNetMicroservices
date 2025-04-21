@@ -1,6 +1,6 @@
-﻿using Ordering.Domain.Entities;
+﻿using Ordering.Core.Entities;
 
-namespace Ordering.Application.Contracts.Persistence
+namespace Ordering.Core.Repositories
 {
     public interface IOrderRepository : IAsyncRepository<Order>
     {

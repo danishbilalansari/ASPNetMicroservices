@@ -1,7 +1,8 @@
-﻿namespace Ordering.Domain.Common
+﻿namespace Ordering.Core.Common
 {
     public abstract class EntityBase
     {
+        // Protected set is made to use in the derived classes
         public int Id { get; protected set; }
         public string CreatedBy { get; set; }
         public DateTime CreatedDate { get; set; }

@@ -1,4 +1,4 @@
-﻿namespace Ordering.Domain.Common
+﻿namespace Ordering.Core.Common
 {
     /// <summary>
     /// Following is based on domain driven design

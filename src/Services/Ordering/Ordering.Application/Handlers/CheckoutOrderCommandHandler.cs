@@ -1,12 +1,13 @@
 ﻿using AutoMapper;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Ordering.Application.Commands;
 using Ordering.Application.Contracts.Infrastructure;
-using Ordering.Application.Contracts.Persistence;
 using Ordering.Application.Models;
-using Ordering.Domain.Entities;
+using Ordering.Core.Entities;
+using Ordering.Core.Repositories;
 
-namespace Ordering.Application.Features.Orders.Commands.CheckoutOrder
+namespace Ordering.Application.Handlers
 {
     public class CheckoutOrderCommandHandler : IRequestHandler<CheckoutOrderCommand, int>
     {
