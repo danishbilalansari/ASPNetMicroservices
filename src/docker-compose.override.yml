@@ -104,23 +104,13 @@ services:
     ports:
       - "8002:8080"
 
-  discount.grpc:
-    container_name: discount.grpc
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - "DatabaseSettings:ConnectionString=Server=discountdb;Port=5432;Database=DiscountDb;User Id=admin;Password=admin1234;"
-    depends_on:
-      - discountdb
-    ports:
-      - "8003:8080"
-      
   ordering.api:
     container_name: ordering.api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - "ConnectionStrings:OrderingConnectionString=Server=orderdb;Database=OrderDb;User Id=sa;Password=pakistan;"
+      - "ConnectionStrings:OrderingConnectionString=Server=orderdb;Database=OrderDb;User Id=sa;Password=pakistan;TrustServerCertificate=true"
     depends_on:
       - orderdb
     ports:
-      - "8004:8080"
+      - "8003:8080"
 
